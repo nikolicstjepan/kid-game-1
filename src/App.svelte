@@ -17,32 +17,92 @@
         right: "➡️",
     };
 
+    let moves: {
+        direction: "up" | "down" | "left" | "right";
+        delta: number;
+        isValid: boolean;
+    }[] = [];
+
+    let itemsCollected: {
+        name: string;
+        count: number;
+        field: number[];
+    }[] = [];
+
     const move = (direction: "up" | "down" | "left" | "right", delta: number) => {
         const [x, y] = playerPosition;
+        let isValid = false;
         switch (direction) {
-            case "up":
-                playerPosition[0] = x > 0 && x - delta >= 0 ? x - delta : x;
+            case "up": {
+                isValid = x > 0 && x - delta >= 0;
+                playerPosition[0] = isValid ? x - delta : x;
                 playerPosition[1] = y;
                 break;
-            case "down":
-                playerPosition[0] =
-                    x < board.length - 1 && x + delta < board.length ? x + delta : x;
+            }
+            case "down": {
+                isValid = x < board.length - 1 && x + delta < board.length;
+                playerPosition[0] = isValid ? x + delta : x;
                 playerPosition[1] = y;
                 break;
-            case "left":
+            }
+            case "left": {
+                isValid = y > 0 && y - delta >= 0;
                 playerPosition[0] = x;
-                playerPosition[1] = y > 0 && y - delta >= 0 ? y - delta : y;
+                playerPosition[1] = isValid ? y - delta : y;
                 break;
-            case "right":
+            }
+            case "right": {
+                isValid = y < board[0].length - 1 && y + delta < board[0].length;
                 playerPosition[0] = x;
-                playerPosition[1] =
-                    y < board[0].length - 1 && y + delta < board[0].length ? y + delta : y;
+                playerPosition[1] = isValid ? y + delta : y;
                 break;
+            }
         }
-        const filed = board[playerPosition[0]][playerPosition[1]];
-        if (filed.onStep) {
-            filed.onStep();
+        moves = [
+            ...moves,
+            {
+                direction,
+                delta,
+                isValid,
+            },
+        ];
+        const field = board[playerPosition[0]][playerPosition[1]];
+        if (field.onStep) {
+            field.onStep();
         }
+        if (field.type === "item") {
+            console.log({ field });
+            const alreadyCollected = itemsCollected.find(
+                (i) => i.field[0] === playerPosition[0] && i.field[1] === playerPosition[1]
+            );
+
+            console.log({ alreadyCollected });
+            if (alreadyCollected) {
+                return;
+            }
+
+            const itemIndex = itemsCollected.findIndex((i) => i.name === field.name);
+
+            if (itemIndex > -1) {
+                const newItemsCollected = [...itemsCollected];
+                const item = itemsCollected[itemIndex];
+                item.count++;
+
+                newItemsCollected[itemIndex] = item;
+                itemsCollected = newItemsCollected;
+            } else {
+                itemsCollected = [
+                    ...itemsCollected,
+                    {
+                        name: field.name,
+                        count: 1,
+                        field: [...playerPosition],
+                    },
+                ];
+                console.log({ itemsCollected });
+            }
+        }
+        selectedAction = null;
     };
 
     $: allPossibleMoves = actions
@@ -67,11 +127,14 @@
                     break;
                 case "down":
                     for (let i = 1; i <= board.length - 1 - x; i++) {
-                        if (board[x + i][y].userCanStep) {
+                        const field = board[x + i][y];
+                        if (field?.userCanStep) {
                             possibleMoves.push({
                                 ...action,
                                 delta: i,
                             });
+                        } else if (field?.userCanJumpOver) {
+                            continue;
                         } else {
                             break;
                         }
@@ -79,11 +142,14 @@
                     break;
                 case "left":
                     for (let i = 1; i <= y; i++) {
-                        if (board[x][y - i].userCanStep) {
+                        const field = board[x][y - i];
+                        if (field?.userCanStep) {
                             possibleMoves.push({
                                 ...action,
                                 delta: i,
                             });
+                        } else if (field?.userCanJumpOver) {
+                            continue;
                         } else {
                             break;
                         }
@@ -91,11 +157,14 @@
                     break;
                 case "right":
                     for (let i = 1; i <= board[0].length - 1 - y; i++) {
-                        if (board[x][y + i].userCanStep) {
+                        const field = board[x][y + i];
+                        if (field?.userCanStep) {
                             possibleMoves.push({
                                 ...action,
                                 delta: i,
                             });
+                        } else if (field?.userCanJumpOver) {
+                            continue;
                         } else {
                             break;
                         }
@@ -109,11 +178,13 @@
     $: stepsAllowedForSelectedAction = allPossibleMoves.filter(
         (move) => move.direction === selectedAction?.direction
     );
+    $: allPossibleDirections = [...new Set(allPossibleMoves.map((move) => move.direction))];
 </script>
 
 <main>
-    <div class="grid grid-cols-2 gap-2">
-        <div class="border-r min-h-screen grid items-center">
+    <!-- <pre>{JSON.stringify(itemsCollected, null, 4)}</pre> -->
+    <div class="">
+        <div class="p-4">
             <div
                 class="grid justify-center grid-cols-[repeat(10,48px)] grid-rows-[repeat(10,48px)]"
             >
@@ -121,35 +192,57 @@
                     {#each row as field, j}
                         <div class={`border ${field.bgColor}`}>
                             {#if playerPosition[0] === i && playerPosition[1] === j}
-                                <img src="/user.png" class="p-1" alt="user" />
+                                <div class="relative">
+                                    <img src="/user.png" class="p-1" alt="user" />
+                                    {#each allPossibleDirections as dir}
+                                        <div
+                                            class={`absolute ${
+                                                dir === "down" ? "top-[100%] left-0 right-0" : ""
+                                            } ${
+                                                dir === "right" ? "left-[100%] top-0 bottom-0" : ""
+                                            } ${
+                                                dir === "left" ? "right-[100%] top-0 bottom-0" : ""
+                                            } ${
+                                                dir === "up" ? "bottom-[100%] left-0 right-0" : ""
+                                            } grid place-items-center`}
+                                        >
+                                            <button
+                                                on:click={() =>
+                                                    (selectedAction = {
+                                                        action: "move",
+                                                        direction: dir,
+                                                    })}
+                                                class="text-lg font-bold cursor-pointer"
+                                            >
+                                                {arrows[dir]}
+                                            </button>
+                                        </div>
+                                    {/each}
+                                </div>
+                            {:else}
+                                <img
+                                    src={`/${field.name || field.type}.png`}
+                                    class="p-1"
+                                    alt="field"
+                                />
                             {/if}
                         </div>
                     {/each}
                 {/each}
             </div>
-        </div>
-        <div>
-            <div class="border-r min-h-screen grid items-center">
-                <div class="grid justify-center">
-                    <div class="grid grid-cols-4 gap-2">
-                        {#each actions as action}
-                            <button
-                                class={`text-4xl ${
-                                    selectedAction && selectedAction.direction === action.direction
-                                        ? "text-6xl"
-                                        : ""
-                                }`}
-                                on:click={() => (selectedAction = action)}
-                            >
-                                {arrows[action.direction]}
-                            </button>
-                        {/each}
+            <div class="flex flex-col max-h-32 flex-wrap gap-4 p-2">
+                {#each moves as move, i}
+                    <div>
+                        {i + 1}. {arrows[move.direction]} | {move.delta}
                     </div>
-                    <div class="grid grid-cols-4 gap-1 mt-4 justify-center">
-                        {#each stepsAllowedForSelectedAction.map((s) => s.delta) as step}
+                {/each}
+            </div>
+            {#if selectedAction}
+                <div class="fixed bottom-0 left-0 right-0 p-1">
+                    <div class="grid grid-cols-9 gap-1 mt-4 justify-center">
+                        {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as step}
                             <button
-                                class={"border text-4xl disabled:text-gray-400"}
-                                disabled={!selectedAction}
+                                class={"border text-2xl disabled:text-gray-400"}
                                 on:click={() => move(selectedAction.direction, step)}
                             >
                                 {step}
@@ -157,7 +250,7 @@
                         {/each}
                     </div>
                 </div>
-            </div>
+            {/if}
         </div>
     </div>
 </main>

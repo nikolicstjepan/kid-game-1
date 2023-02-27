@@ -31,11 +31,27 @@ const secretField: Field = {
     bgColor: "bg-yellow-300",
 };
 
+const lollipopField: Field = {
+    userCanStep: true,
+    userCanJumpOver: false,
+    type: "item",
+    name: "lollipop",
+    bgColor: "bg-blue-100",
+};
+
+const keyField: Field = {
+    userCanStep: true,
+    userCanJumpOver: false,
+    type: "item",
+    name: "key",
+    bgColor: "bg-blue-100",
+};
+
 export default [
     [
         [
             grassField,
-            grassField,
+            lollipopField,
             grassField,
             wallField,
             grassField,
@@ -47,6 +63,18 @@ export default [
         ],
         [
             grassField,
+            lollipopField,
+            grassField,
+            grassField,
+            grassField,
+            wallField,
+            grassField,
+            grassField,
+            rockField,
+            grassField,
+        ],
+        [
+            grassField,
             wallField,
             grassField,
             grassField,
@@ -54,7 +82,7 @@ export default [
             wallField,
             grassField,
             grassField,
-            grassField,
+            lollipopField,
             grassField,
         ],
         [
@@ -78,19 +106,7 @@ export default [
             wallField,
             grassField,
             grassField,
-            grassField,
-            grassField,
-        ],
-        [
-            grassField,
-            wallField,
-            grassField,
-            grassField,
-            grassField,
-            wallField,
-            grassField,
-            grassField,
-            grassField,
+            keyField,
             grassField,
         ],
         [
