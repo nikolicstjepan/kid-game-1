@@ -1,8 +1,14 @@
 <script lang="ts">
     import actions from "./actions";
     import boards from "./boards";
+    let walkingAudio;
+    let lickingAudio;
+    let victoryAudio;
+    let invalidMoveAudio;
 
-    const board = boards[0];
+    let boardNumber = 0;
+
+    let board = boards[boardNumber];
     let playerPosition = [0, 0];
 
     let selectedAction: {
@@ -25,39 +31,13 @@
 
     let itemsCollected: {
         name: string;
-        count: number;
         field: number[];
     }[] = [];
 
     const move = (direction: "up" | "down" | "left" | "right", delta: number) => {
         const [x, y] = playerPosition;
-        let isValid = false;
-        switch (direction) {
-            case "up": {
-                isValid = x > 0 && x - delta >= 0;
-                playerPosition[0] = isValid ? x - delta : x;
-                playerPosition[1] = y;
-                break;
-            }
-            case "down": {
-                isValid = x < board.length - 1 && x + delta < board.length;
-                playerPosition[0] = isValid ? x + delta : x;
-                playerPosition[1] = y;
-                break;
-            }
-            case "left": {
-                isValid = y > 0 && y - delta >= 0;
-                playerPosition[0] = x;
-                playerPosition[1] = isValid ? y - delta : y;
-                break;
-            }
-            case "right": {
-                isValid = y < board[0].length - 1 && y + delta < board[0].length;
-                playerPosition[0] = x;
-                playerPosition[1] = isValid ? y + delta : y;
-                break;
-            }
-        }
+        let isValid = allPossibleMoves.find((m) => m.direction === direction && m.delta === delta);
+
         moves = [
             ...moves,
             {
@@ -66,43 +46,68 @@
                 isValid,
             },
         ];
+
+        if (!isValid) {
+            invalidMoveAudio.play();
+            return;
+        }
+
+        walkingAudio.play();
+
+        switch (direction) {
+            case "up":
+                playerPosition[0] = x - delta;
+                break;
+
+            case "down":
+                playerPosition[0] = x + delta;
+                break;
+            case "left":
+                playerPosition[1] = y - delta;
+                break;
+            case "right":
+                playerPosition[1] = y + delta;
+                break;
+        }
+
         const field = board[playerPosition[0]][playerPosition[1]];
         if (field.onStep) {
             field.onStep();
         }
         if (field.type === "item") {
-            console.log({ field });
             const alreadyCollected = itemsCollected.find(
                 (i) => i.field[0] === playerPosition[0] && i.field[1] === playerPosition[1]
             );
 
-            console.log({ alreadyCollected });
             if (alreadyCollected) {
                 return;
             }
-
-            const itemIndex = itemsCollected.findIndex((i) => i.name === field.name);
-
-            if (itemIndex > -1) {
-                const newItemsCollected = [...itemsCollected];
-                const item = itemsCollected[itemIndex];
-                item.count++;
-
-                newItemsCollected[itemIndex] = item;
-                itemsCollected = newItemsCollected;
-            } else {
-                itemsCollected = [
-                    ...itemsCollected,
-                    {
-                        name: field.name,
-                        count: 1,
-                        field: [...playerPosition],
-                    },
-                ];
-                console.log({ itemsCollected });
-            }
+            lickingAudio.play();
+            itemsCollected = [
+                ...itemsCollected,
+                {
+                    name: field.name,
+                    field: [...playerPosition],
+                },
+            ];
         }
         selectedAction = null;
+        if (isGameOver()) {
+            victoryAudio.play();
+            setTimeout(() => {
+                alert("Bravo! 🎉🎉🎉🎉🎉🎉");
+                moves = [];
+                itemsCollected = [];
+                playerPosition = [0, 0];
+                if (boards[boardNumber + 1]) {
+                    boardNumber++;
+                    board = boards[boardNumber];
+                } else {
+                    boardNumber = 0;
+                    board = boards[boardNumber];
+                }
+            }, 1000);
+        }
     };
 
     $: allPossibleMoves = actions
@@ -175,14 +180,23 @@
         })
         .flat();
 
-    $: stepsAllowedForSelectedAction = allPossibleMoves.filter(
-        (move) => move.direction === selectedAction?.direction
-    );
     $: allPossibleDirections = [...new Set(allPossibleMoves.map((move) => move.direction))];
+
+    $: totalLollipopsInGame = board.flat().filter((field) => field.name === "lollipop").length;
+    console.log({ totalLollipopsInGame });
+
+    const isGameOver = () =>
+        totalLollipopsInGame === itemsCollected.filter((i) => i.name === "lollipop").length;
+
+    $: isCollected = (field) => {
+        const alreadyCollected = itemsCollected.find(
+            (i) => i.field[0] === field[0] && i.field[1] === field[1]
+        );
+        return !!alreadyCollected;
+    };
 </script>
 
 <main>
-    <!-- <pre>{JSON.stringify(itemsCollected, null, 4)}</pre> -->
     <div class="">
         <div class="p-4 pt-16">
             <div
@@ -219,7 +233,7 @@
                                         </div>
                                     {/each}
                                 </div>
-                            {:else}
+                            {:else if !isCollected([i, j])}
                                 <img
                                     src={`/${field.name || field.type}.png`}
                                     class="p-1 w-full h-full"
@@ -230,13 +244,13 @@
                     {/each}
                 {/each}
             </div>
-            <!--  <div class="flex flex-col max-h-32 flex-wrap gap-4 p-2">
-                {#each moves as move, i}
+            <div class="flex flex-wrap gap-4 p-2">
+                {#each itemsCollected as item}
                     <div>
-                        {i + 1}. {arrows[move.direction]} | {move.delta}
+                        <img src={`/${item.name}.png`} class="w-8 h-8 inline" alt="item" />
                     </div>
                 {/each}
-            </div> -->
+            </div>
             {#if selectedAction}
                 <div class="fixed bottom-0 left-0 right-0 p-1">
                     <div class="text-center text-4xl p-2">{arrows[selectedAction.direction]}</div>
@@ -254,4 +268,8 @@
             {/if}
         </div>
     </div>
+    <audio src="/footsteps.wav" bind:this={walkingAudio} />
+    <audio src="/invalid.mp3" bind:this={invalidMoveAudio} />
+    <audio src="/lick.wav" bind:this={lickingAudio} />
+    <audio src="/victory.mp3" bind:this={victoryAudio} />
 </main>
