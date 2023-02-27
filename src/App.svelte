@@ -184,16 +184,16 @@
 <main>
     <!-- <pre>{JSON.stringify(itemsCollected, null, 4)}</pre> -->
     <div class="">
-        <div class="p-4">
+        <div class="p-4 pt-16">
             <div
-                class="grid justify-center grid-cols-[repeat(10,48px)] grid-rows-[repeat(10,48px)]"
+                class="grid justify-center grid-cols-[repeat(10,68px)] grid-rows-[repeat(10,68px)]"
             >
                 {#each board as row, i}
                     {#each row as field, j}
                         <div class={`border ${field.bgColor}`}>
                             {#if playerPosition[0] === i && playerPosition[1] === j}
                                 <div class="relative">
-                                    <img src="/user.png" class="p-1" alt="user" />
+                                    <img src="/user.png" width="100%" class="p-1" alt="user" />
                                     {#each allPossibleDirections as dir}
                                         <div
                                             class={`absolute ${
@@ -212,7 +212,7 @@
                                                         action: "move",
                                                         direction: dir,
                                                     })}
-                                                class="text-lg font-bold cursor-pointer"
+                                                class="text-3xl font-bold cursor-pointer"
                                             >
                                                 {arrows[dir]}
                                             </button>
@@ -222,7 +222,7 @@
                             {:else}
                                 <img
                                     src={`/${field.name || field.type}.png`}
-                                    class="p-1"
+                                    class="p-1 w-full h-full"
                                     alt="field"
                                 />
                             {/if}
@@ -230,19 +230,20 @@
                     {/each}
                 {/each}
             </div>
-            <div class="flex flex-col max-h-32 flex-wrap gap-4 p-2">
+            <!--  <div class="flex flex-col max-h-32 flex-wrap gap-4 p-2">
                 {#each moves as move, i}
                     <div>
                         {i + 1}. {arrows[move.direction]} | {move.delta}
                     </div>
                 {/each}
-            </div>
+            </div> -->
             {#if selectedAction}
                 <div class="fixed bottom-0 left-0 right-0 p-1">
+                    <div class="text-center text-4xl p-2">{arrows[selectedAction.direction]}</div>
                     <div class="grid grid-cols-9 gap-1 mt-4 justify-center">
                         {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as step}
                             <button
-                                class={"border text-2xl disabled:text-gray-400"}
+                                class={"border p-1 text-6xl disabled:text-gray-400"}
                                 on:click={() => move(selectedAction.direction, step)}
                             >
                                 {step}
