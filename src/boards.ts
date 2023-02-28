@@ -21,14 +21,38 @@ const rockField: Field = {
     bgColor: "bg-gray-400",
 };
 
-const secretField: Field = {
+const createDoorField = (): Field => ({
+    userCanStep: false,
+    userCanJumpOver: false,
+    type: "door",
+    bgColor: "bg-brown-300",
+    attributes: {
+        status: "closed",
+    },
+});
+
+const keyField: Field = {
     userCanStep: true,
     userCanJumpOver: false,
-    type: "secret",
-    onStep: () => {
-        console.log("You found a secret!");
-    },
+    type: "item",
+    name: "key",
     bgColor: "bg-yellow-300",
+    onStep: ({ board }) => {
+        const doorField = board.reduce((acc, row) => {
+            const doors = row.filter(
+                (field) => field.type === "door" && field.attributes.status === "closed"
+            );
+            if (doors.length > 0) {
+                acc.push(...doors);
+            }
+            return acc;
+        }, [] as Field[]);
+
+        if (doorField && doorField[0]) {
+            doorField[0].attributes.status = "open";
+            doorField[0].userCanStep = true;
+        }
+    },
 };
 
 const lollipopField: Field = {
@@ -129,12 +153,12 @@ const boardOne = [
         wallField,
         lollipopField,
         grassField,
-        grassField,
+        keyField,
         wallField,
         grassField,
         grassField,
-        rockField,
-        rockField,
+        wallField,
+        createDoorField(),
     ],
     [
         grassField,
@@ -145,7 +169,7 @@ const boardOne = [
         wallField,
         grassField,
         grassField,
-        rockField,
+        wallField,
         lollipopField,
     ],
     [
@@ -157,7 +181,7 @@ const boardOne = [
         grassField,
         grassField,
         grassField,
-        rockField,
+        wallField,
         grassField,
     ],
 ];
@@ -194,7 +218,7 @@ const boardTwo = [
         grassField,
         wallField,
         grassField,
-        grassField,
+        keyField,
         wallField,
         grassField,
         grassField,
@@ -229,14 +253,14 @@ const boardTwo = [
         wallField,
         grassField,
         wallField,
-        grassField,
+        rockField,
         wallField,
         grassField,
         wallField,
         grassField,
     ],
     [
-        grassField,
+        lollipopField,
         grassField,
         wallField,
         grassField,
@@ -249,7 +273,7 @@ const boardTwo = [
     ],
     [
         wallField,
-        wallField,
+        grassField,
         wallField,
         grassField,
         wallField,
@@ -262,7 +286,7 @@ const boardTwo = [
     [
         wallField,
         grassField,
-        grassField,
+        createDoorField(),
         grassField,
         grassField,
         grassField,
@@ -539,7 +563,7 @@ const boardFive = [
         grassField,
         wallField,
         wallField,
-        grassField,
+        keyField,
         grassField,
         grassField,
         grassField,
@@ -599,7 +623,7 @@ const boardFive = [
         grassField,
         grassField,
         grassField,
-        grassField,
+        wallField,
         grassField,
         wallField,
         grassField,
@@ -620,7 +644,7 @@ const boardFive = [
         wallField,
         grassField,
         wallField,
-        grassField,
+        createDoorField(),
         wallField,
         wallField,
         wallField,
@@ -736,11 +760,11 @@ const boardSix = [
         grassField,
         grassField,
         wallField,
-        grassField,
+        createDoorField(),
         wallField,
     ],
     [
-        grassField,
+        keyField,
         grassField,
         grassField,
         grassField,
@@ -787,7 +811,7 @@ const boardSeven = [
         grassField,
         grassField,
         grassField,
-        grassField,
+        keyField,
         lollipopField,
     ],
     [
@@ -819,7 +843,7 @@ const boardSeven = [
         grassField,
         wallField,
         grassField,
-        grassField,
+        createDoorField(),
         lollipopField,
         wallField,
         grassField,
@@ -831,8 +855,8 @@ const boardSeven = [
         grassField,
         wallField,
         grassField,
-        grassField,
-        grassField,
+        wallField,
+        wallField,
         wallField,
         grassField,
         wallField,
@@ -875,6 +899,7 @@ const boardSeven = [
         wallField,
     ],
     [
+        lollipopField,
         rockField,
         grassField,
         grassField,
@@ -883,7 +908,6 @@ const boardSeven = [
         grassField,
         grassField,
         grassField,
-        lollipopField,
         wallField,
     ],
     [
@@ -900,4 +924,136 @@ const boardSeven = [
     ],
 ];
 
-export default [boardOne, boardTwo, boardThree, boardFour, boardFive, boardSix, boardSeven];
+const boardEight = [
+    [
+        grassField,
+        wallField,
+        grassField,
+        grassField,
+        grassField,
+        wallField,
+        wallField,
+        wallField,
+        keyField,
+        lollipopField,
+    ],
+    [
+        grassField,
+        wallField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        wallField,
+        grassField,
+        grassField,
+    ],
+    [
+        grassField,
+        wallField,
+        wallField,
+        wallField,
+        grassField,
+        grassField,
+        grassField,
+        wallField,
+        wallField,
+        grassField,
+    ],
+    [
+        grassField,
+        wallField,
+        grassField,
+        wallField,
+        wallField,
+        lollipopField,
+        grassField,
+        wallField,
+        grassField,
+        grassField,
+    ],
+    [
+        grassField,
+        wallField,
+        grassField,
+        wallField,
+        wallField,
+        wallField,
+        grassField,
+        wallField,
+        grassField,
+        grassField,
+    ],
+    [
+        grassField,
+        wallField,
+        keyField,
+        grassField,
+        grassField,
+        wallField,
+        grassField,
+        wallField,
+        grassField,
+        grassField,
+    ],
+    [
+        grassField,
+        wallField,
+        wallField,
+        wallField,
+        lollipopField,
+        wallField,
+        grassField,
+        wallField,
+        wallField,
+        grassField,
+    ],
+    [
+        grassField,
+        grassField,
+        grassField,
+        wallField,
+        grassField,
+        wallField,
+        grassField,
+        grassField,
+        wallField,
+        grassField,
+    ],
+    [
+        wallField,
+        rockField,
+        wallField,
+        wallField,
+        createDoorField(),
+        wallField,
+        createDoorField(),
+        wallField,
+        wallField,
+        grassField,
+    ],
+    [
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+        grassField,
+    ],
+];
+
+export default [
+    boardOne,
+    boardTwo,
+    boardThree,
+    boardFour,
+    boardFive,
+    boardSix,
+    boardSeven,
+    boardEight,
+];

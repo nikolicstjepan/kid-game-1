@@ -5,8 +5,9 @@
     let lickingAudio;
     let victoryAudio;
     let invalidMoveAudio;
+    let keyAudio;
 
-    let boardNumber = 0;
+    let boardNumber = 5;
 
     let board = boards[boardNumber];
     let playerPosition = [0, 0];
@@ -71,9 +72,6 @@
         }
 
         const field = board[playerPosition[0]][playerPosition[1]];
-        if (field.onStep) {
-            field.onStep();
-        }
         if (field.type === "item") {
             const alreadyCollected = itemsCollected.find(
                 (i) => i.field[0] === playerPosition[0] && i.field[1] === playerPosition[1]
@@ -82,7 +80,18 @@
             if (alreadyCollected) {
                 return;
             }
-            lickingAudio.play();
+
+            if (field.onStep) {
+                field.onStep({ board });
+                board = [...board];
+            }
+
+            if (field.name === "lollipop") {
+                lickingAudio.play();
+            } else if (field.name === "key") {
+                keyAudio.play();
+            }
+
             itemsCollected = [
                 ...itemsCollected,
                 {
@@ -235,7 +244,14 @@
                                 </div>
                             {:else if !isCollected([i, j])}
                                 <img
-                                    src={`/${field.name || field.type}.png`}
+                                    src={`/${
+                                        field.name ||
+                                        `${field.type}${
+                                            field.attributes?.status
+                                                ? `-${field.attributes?.status}`
+                                                : ""
+                                        }`
+                                    }.png`}
                                     class="p-1 w-full h-full"
                                     alt="field"
                                 />
@@ -272,4 +288,5 @@
     <audio src="/invalid.mp3" bind:this={invalidMoveAudio} />
     <audio src="/lick.wav" bind:this={lickingAudio} />
     <audio src="/victory.mp3" bind:this={victoryAudio} />
+    <audio src="/key.wav" bind:this={keyAudio} />
 </main>
