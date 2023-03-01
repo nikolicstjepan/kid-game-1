@@ -55,6 +55,13 @@ const keyField: Field = {
     },
 };
 
+const holeField: Field = {
+    userCanStep: true,
+    userCanJumpOver: false,
+    type: "hole",
+    bgColor: "bg-green-700",
+};
+
 const lollipopField: Field = {
     userCanStep: true,
     userCanJumpOver: false,
@@ -113,7 +120,7 @@ const boardOne = [
         grassField,
     ],
     [
-        grassField,
+        holeField,
         wallField,
         grassField,
         grassField,
@@ -175,7 +182,7 @@ const boardOne = [
     [
         grassField,
         rockField,
-        grassField,
+        holeField,
         grassField,
         grassField,
         grassField,
@@ -281,7 +288,7 @@ const boardTwo = [
         wallField,
         grassField,
         wallField,
-        grassField,
+        holeField,
     ],
     [
         wallField,
@@ -292,7 +299,7 @@ const boardTwo = [
         grassField,
         grassField,
         grassField,
-        grassField,
+        holeField,
         rockField,
     ],
     [
@@ -1047,7 +1054,7 @@ const boardEight = [
     ],
 ];
 
-export default [
+const boards = [
     boardOne,
     boardTwo,
     boardThree,
@@ -1057,3 +1064,5 @@ export default [
     boardSeven,
     boardEight,
 ];
+
+export default boards;

@@ -7,7 +7,7 @@
     let invalidMoveAudio;
     let keyAudio;
 
-    let boardNumber = 5;
+    let boardNumber = 0;
 
     let board = boards[boardNumber];
     let playerPosition = [0, 0];
@@ -90,6 +90,8 @@
                 lickingAudio.play();
             } else if (field.name === "key") {
                 keyAudio.play();
+            } else if (field.name === "door") {
+                keyAudio.play();
             }
 
             itemsCollected = [
@@ -99,6 +101,11 @@
                     field: [...playerPosition],
                 },
             ];
+        } else if (field.type === "hole") {
+            playerPosition = [0, 0];
+            itemsCollected = [];
+            moves = [];
+            board = boards[boardNumber];
         }
         selectedAction = null;
         if (isGameOver()) {
@@ -217,30 +224,6 @@
                             {#if playerPosition[0] === i && playerPosition[1] === j}
                                 <div class="relative">
                                     <img src="/user.png" width="100%" class="p-1" alt="user" />
-                                    {#each allPossibleDirections as dir}
-                                        <div
-                                            class={`absolute ${
-                                                dir === "down" ? "top-[100%] left-0 right-0" : ""
-                                            } ${
-                                                dir === "right" ? "left-[100%] top-0 bottom-0" : ""
-                                            } ${
-                                                dir === "left" ? "right-[100%] top-0 bottom-0" : ""
-                                            } ${
-                                                dir === "up" ? "bottom-[100%] left-0 right-0" : ""
-                                            } grid place-items-center`}
-                                        >
-                                            <button
-                                                on:click={() =>
-                                                    (selectedAction = {
-                                                        action: "move",
-                                                        direction: dir,
-                                                    })}
-                                                class="text-3xl font-bold cursor-pointer"
-                                            >
-                                                {arrows[dir]}
-                                            </button>
-                                        </div>
-                                    {/each}
                                 </div>
                             {:else if !isCollected([i, j])}
                                 <img
@@ -266,6 +249,32 @@
                         <img src={`/${item.name}.png`} class="w-8 h-8 inline" alt="item" />
                     </div>
                 {/each}
+            </div>
+
+            <div class="relative w-10 h-10 mx-auto mt-10">
+                <div />
+                {#if !selectedAction}
+                    {#each allPossibleDirections as dir}
+                        <div
+                            class={`absolute ${dir === "down" ? "top-[100%] left-0 right-0" : ""} ${
+                                dir === "right" ? "left-[100%] top-0 bottom-0" : ""
+                            } ${dir === "left" ? "right-[100%] top-0 bottom-0" : ""} ${
+                                dir === "up" ? "bottom-[100%] left-0 right-0" : ""
+                            } grid place-items-center`}
+                        >
+                            <button
+                                on:click={() =>
+                                    (selectedAction = {
+                                        action: "move",
+                                        direction: dir,
+                                    })}
+                                class="text-3xl font-bold cursor-pointer"
+                            >
+                                {arrows[dir]}
+                            </button>
+                        </div>
+                    {/each}
+                {/if}
             </div>
             {#if selectedAction}
                 <div class="fixed bottom-0 left-0 right-0 p-1">
